@@ -1,0 +1,13 @@
+# This is the main configuration file for the Chairman's
+# Quiz program.  Plase refer to the bottom of the file
+# for help on the individual options.
+# http://www.coderedrobotics.com/
+preferences:
+  Question-Order:
+  Display-Colors:
+  Use-Horn:
+  Horn-Duration:
+  Use-Timer:
+  Timer-Duration:
+  CSV-Split-By:
+
