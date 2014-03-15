@@ -30,9 +30,10 @@ public class GUI extends javax.swing.JFrame {
     QuestionManager questionManager;
     Random rand;
     Timer timer;
+    Horn horn;
 
-    int correct;
-    int incorrect;
+    double correct;
+    double incorrect;
     Question currentQuestion;
 
     /**
@@ -62,14 +63,15 @@ public class GUI extends javax.swing.JFrame {
         rand = new Random();
         questionManager = new QuestionManager();
         timer = new Timer();
+        horn = new Horn();
+        timer.start();
+        horn.start();
 
         if (prefs.getQuestionOrder() == Preferences.QuestionOrder.SHUFFLED) {
             questionManager.shuffleQuestions();
         }
 
         setHome();
-//        timer.startAndControlClock(timerLabel, 135);
-//        timer.start();
     }
 
     public final void setQuestion(Question question) {
@@ -105,6 +107,9 @@ public class GUI extends javax.swing.JFrame {
                 + "<h2>Please choose the best response to the following question.  </h2>"
                 + "<p>" + question.getQuestion() + "</p>"
                 + "</center><br>" + answerString + "</html>");
+        if(prefs.usingTimer()){
+            timer.startAndControlClock(timerLabel, prefs.getTimerDuration() + 1);
+        }
     }
 
     public final void setHome() {
@@ -114,26 +119,23 @@ public class GUI extends javax.swing.JFrame {
                 + String.valueOf(prefs.getNumberOfQuestions()) + " question multiple "
                 + "choice quiz.</p>"
                 + "<br><i>Press any button to begin...</i></center></html>");
+        timer.stop();
     }
 
     public final void setEnd() {
         panel.setBackground(Color.BLACK);
         String text;
         if (correct > incorrect || correct == incorrect) {
-            text = "<h1>YOU WIN!</h1>"
-                    + "<h2>You answered " + correct + " of "
-                    + (correct + incorrect) + " questions correctly.  ("
-                    + (((correct / (correct + incorrect)) * 100)) + "%)</h2>"
-                    + "<br><i>Press any key to continue...</i>";
-            System.out.println(100 * (correct / (correct + incorrect)));
+            text = "<h1>YOU WIN!</h1>";
         } else {
-            text = "<h1>YOU LOSE!</h1>"
-                    + "<h2>You answered " + correct + " of "
-                    + (correct + incorrect) + " questions correctly.  ("
-                    + (((correct / (correct + incorrect)) * 100)) + "%)</h2>"
-                    + "<br><i>Press any key to continue...</i>";
+            text = "<h1>YOU LOSE!</h1>";
         }
+        text += "<h2>You answered " + (int) (correct) + " of "
+                + (int) (correct + incorrect) + " questions correctly.  ("
+                + ((int) ((correct / (correct + incorrect)) * 100)) + "%)</h2>"
+                + "<br><i>Press any key to continue...</i>";
         mainPanel.setText("<html><center>" + text + "</center></html>");
+        timer.startAndControlClock(timerLabel, 11);
     }
 
     public void handleResponse(int i) {
@@ -165,8 +167,13 @@ public class GUI extends javax.swing.JFrame {
                             + "<h2>The correct answer is: " + currentQuestion.getCorrectAnswer()
                             + "<p>" + currentQuestion.getExplanation() + "</p>"
                             + "<br><i>Press any key to continue...</i></center></html>");
+
+                    if (prefs.useHorn()) {
+                        horn.burstHorn(prefs.getHornDuration());
+                    }
                     incorrect++;
                 }
+                timer.startAndControlClock(timerLabel, 31);
                 break;
             case CORRECT:
                 if (incorrect + correct < prefs.getNumberOfQuestions()) {
@@ -302,6 +309,7 @@ public class GUI extends javax.swing.JFrame {
         }
         //</editor-fold>
 
+        Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
@@ -338,6 +346,12 @@ public class GUI extends javax.swing.JFrame {
                     break;
                 case KeyEvent.VK_4:
                     handleResponse(4);
+                    break;
+                case KeyEvent.VK_CAPS_LOCK:
+                    break;
+                case KeyEvent.VK_SCROLL_LOCK:
+                    break;
+                case KeyEvent.VK_NUM_LOCK:
                     break;
                 default:
                     handleResponse(0);

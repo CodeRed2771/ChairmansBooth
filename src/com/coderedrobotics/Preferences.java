@@ -25,7 +25,7 @@ public class Preferences {
     private boolean useHorn = true;
     private int hornDuration = 500;
     private boolean useTimer = true;
-    private int timerDuration = 30;
+    private int timerDuration = 15;
     private int numberOfQuestions = 5;
     private String CSVSplitBy = "^";
 
@@ -40,7 +40,7 @@ public class Preferences {
             + "    useHorn = true\r\n"
             + "    hornDuration = 500\r\n"
             + "    useTimer = true\r\n"
-            + "    timerDuration = 30\r\n"
+            + "    timerDuration = 15\r\n"
             + "    numberOfQuestions = 5\r\n"
             + "    CSVSplitBy = ^\r\n"
             + "#\r\n"
@@ -69,7 +69,7 @@ public class Preferences {
             + "# This determines what to split the question CSV file by.  Please\r\n"
             + "# only modify this if you are absolutely sure you know what you \r\n"
             + "# are doing.  (The recommended character is \"^\").";
-
+    
     public Preferences(QuestionOrder questionOrder, boolean displayColors,
             boolean useHorn, int hornDuration, boolean useTimer, int timerDuration,
             int numberOfQuestions, String CSVSplitBy) {
@@ -167,7 +167,7 @@ public class Preferences {
             boolean useHorn = true;
             int hornDuration = 500;
             boolean useTimer = true;
-            int timerDuration = 30;
+            int timerDuration = 15;
             int numberOfQuestions = 5;
             String CSVSplitBy = "^";
             while ((line = reader.readLine()) != null) {
