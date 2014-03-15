@@ -1,13 +1,40 @@
-# This is the main configuration file for the Chairman's
-# Quiz program.  Plase refer to the bottom of the file
-# for help on the individual options.
+# This is the main configuration file for Code Red Robotic's
+# Chairman's Quiz App.  You can find more help at the bottom
+# of the file.
 # http://www.coderedrobotics.com/
-preferences:
-  Question-Order:
-  Display-Colors:
-  Use-Horn:
-  Horn-Duration:
-  Use-Timer:
-  Timer-Duration:
-  CSV-Split-By:
-
+#
+# CONFIGURATION:
+    questionOrder = SHUFFLED
+    displayColors = true
+    useHorn = true
+    hornDuration = 500
+    useTimer = true
+    timerDuration = 30
+    numberOfQuestions = 5
+    CSVSplitBy = ^
+#
+# So, How do I configure Stuff? Well.....
+#
+# questionOrder can either be RANDOM, SHUFFLED, or SEQUENTIAL.
+#
+# displayColors determines whether colors are displayed when a
+# question is right or wrong.  Can be true/false.
+#
+# useHorn determines whether the horn is used. Can be true/false.
+#
+# hornDuration sets how long the horn is played, and can be any 
+# positive integer, only applicable if useHorn has been set to true.  
+# 
+# useTimer determines whether or not the player plays agains a clock.
+# This can be true/false.
+#
+# timerDuration sets how long the timer is set for, if the useTimer
+# variable is set to true.  Can be any positive integer.
+#
+# numberOfQuestions sets how many questions are in one quiz. IT
+# can be any positive integer.
+#
+# CSVSplitBy can equal any character, or any string of characters.
+# This determines what to split the question CSV file by.  Please
+# only modify this if you are absolutely sure you know what you 
+# are doing.  (The recommended character is "^").

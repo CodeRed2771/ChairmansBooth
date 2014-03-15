@@ -1,11 +1,15 @@
 package com.coderedrobotics;
 
+import java.awt.Color;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 /**
  *
@@ -17,10 +21,19 @@ public class GUI extends javax.swing.JFrame {
 
     public enum State {
 
-        QUESTION, CORRECT, INCORRECT
+        QUESTION, CORRECT, INCORRECT, HOME, END
     }
 
-    State state;
+    State state = State.HOME;
+    private int currentCorrectAnswer;
+    Preferences prefs;
+    QuestionManager questionManager;
+    Random rand;
+    Timer timer;
+
+    int correct;
+    int incorrect;
+    Question currentQuestion;
 
     /**
      * Creates new form GUI
@@ -41,15 +54,154 @@ public class GUI extends javax.swing.JFrame {
         this.setLocation(x, y);
         //</editor-fold>
 
-        addKeyListener(new GUI.KeyListener(this));
+        addKeyListener(new GUI.KeyListener());
         coderedlogo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/com/coderedrobotics/coderedsmall.png"));
-        jLabel3.setText("<html><center>"
-                + "<h3>Please choose the best response to the following question.  </h3>"
-                + "<p>This is a very fake example question that I decided to write "
-                + "and is in english because last time I googled the question "
-                + "of how to wrap text like this I got a very stupid latin "
-                + "paragraph.</p>"
-                + "</center></html>");
+
+        prefs = Preferences.loadPrefs();
+        QuestionLoader.readCSVFile("questions.csv", prefs.getCSVSplitBy());
+        rand = new Random();
+        questionManager = new QuestionManager();
+        timer = new Timer();
+
+        if (prefs.getQuestionOrder() == Preferences.QuestionOrder.SHUFFLED) {
+            questionManager.shuffleQuestions();
+        }
+
+        setHome();
+//        timer.startAndControlClock(timerLabel, 135);
+//        timer.start();
+    }
+
+    public final void setQuestion(Question question) {
+        String answerString = "";
+        ArrayList<String> order = new ArrayList<>();
+        order.add(question.getCorrectAnswer());
+        order.add(question.getOtherAnswers()[0]);
+        order.add(question.getOtherAnswers()[1]);
+        order.add(question.getOtherAnswers()[2]);
+        Collections.shuffle(order);
+        currentCorrectAnswer = order.indexOf(question.getCorrectAnswer());
+        currentQuestion = question;
+        for (String answer : order) {
+            String character = "";
+            switch (order.indexOf(answer)) {
+                case 0:
+                    character = "A) ";
+                    break;
+                case 1:
+                    character = "B) ";
+                    break;
+                case 2:
+                    character = "C) ";
+                    break;
+                case 3:
+                    character = "D) ";
+                    break;
+            }
+            answerString += "<h1>" + character + answer + "</h1>";
+        }
+        panel.setBackground(Color.BLACK);
+        mainPanel.setText("<html><center>"
+                + "<h2>Please choose the best response to the following question.  </h2>"
+                + "<p>" + question.getQuestion() + "</p>"
+                + "</center><br>" + answerString + "</html>");
+    }
+
+    public final void setHome() {
+        panel.setBackground(Color.BLACK);
+        mainPanel.setText("<html><center><h1>How well do you know the code?</h2>"
+                + "<p>Test your knowledge of Code Red Robotics Facts by taking a brief "
+                + String.valueOf(prefs.getNumberOfQuestions()) + " question multiple "
+                + "choice quiz.</p>"
+                + "<br><i>Press any button to begin...</i></center></html>");
+    }
+
+    public final void setEnd() {
+        panel.setBackground(Color.BLACK);
+        String text;
+        if (correct > incorrect || correct == incorrect) {
+            text = "<h1>YOU WIN!</h1>"
+                    + "<h2>You answered " + correct + " of "
+                    + (correct + incorrect) + " questions correctly.  ("
+                    + (((correct / (correct + incorrect)) * 100)) + "%)</h2>"
+                    + "<br><i>Press any key to continue...</i>";
+            System.out.println(100 * (correct / (correct + incorrect)));
+        } else {
+            text = "<h1>YOU LOSE!</h1>"
+                    + "<h2>You answered " + correct + " of "
+                    + (correct + incorrect) + " questions correctly.  ("
+                    + (((correct / (correct + incorrect)) * 100)) + "%)</h2>"
+                    + "<br><i>Press any key to continue...</i>";
+        }
+        mainPanel.setText("<html><center>" + text + "</center></html>");
+    }
+
+    public void handleResponse(int i) {
+        switch (state) {
+            case HOME:
+                state = State.QUESTION;
+                if (prefs.getQuestionOrder() != Preferences.QuestionOrder.RANDOM) {
+                    setQuestion(questionManager.getNextQuestion());
+                } else {
+                    setQuestion(questionManager.getRandomQuestion());
+                }
+                break;
+            case QUESTION:
+                if (i - 1 == currentCorrectAnswer) {
+                    state = State.CORRECT;
+                    if (prefs.displayingColors()) {
+                        panel.setBackground(Color.GREEN);
+                    }
+                    mainPanel.setText("<html><center><h1>CORRECT!</h1>"
+                            + "<p>" + currentQuestion.getExplanation() + "</p>"
+                            + "<br><i>Press any key to continue...</i></center></html>");
+                    correct++;
+                } else {
+                    state = State.INCORRECT;
+                    if (prefs.displayingColors()) {
+                        panel.setBackground(Color.RED);
+                    }
+                    mainPanel.setText("<html><center><h1>INCORRECT!</h1>"
+                            + "<h2>The correct answer is: " + currentQuestion.getCorrectAnswer()
+                            + "<p>" + currentQuestion.getExplanation() + "</p>"
+                            + "<br><i>Press any key to continue...</i></center></html>");
+                    incorrect++;
+                }
+                break;
+            case CORRECT:
+                if (incorrect + correct < prefs.getNumberOfQuestions()) {
+                    state = State.QUESTION;
+                    if (prefs.getQuestionOrder() != Preferences.QuestionOrder.RANDOM) {
+                        setQuestion(questionManager.getNextQuestion());
+                    } else {
+                        setQuestion(questionManager.getRandomQuestion());
+                    }
+                } else if (incorrect + correct == prefs.getNumberOfQuestions()) {
+                    state = State.END;
+                    setEnd();
+                }
+                break;
+            case INCORRECT:
+                if (incorrect + correct < prefs.getNumberOfQuestions()) {
+                    state = State.QUESTION;
+                    if (prefs.getQuestionOrder() != Preferences.QuestionOrder.RANDOM) {
+                        setQuestion(questionManager.getNextQuestion());
+                    } else {
+                        setQuestion(questionManager.getRandomQuestion());
+                    }
+                } else if (incorrect + correct == prefs.getNumberOfQuestions()) {
+                    state = State.END;
+                    setEnd();
+                }
+                break;
+            case END:
+                state = State.HOME;
+                correct = 0;
+                incorrect = 0;
+                currentQuestion = null;
+                setHome();
+                break;
+        }
     }
 
     /**
@@ -62,72 +214,48 @@ public class GUI extends javax.swing.JFrame {
     private void initComponents() {
 
         panel = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
-        jLabel8 = new javax.swing.JLabel();
+        logo = new javax.swing.JLabel();
+        title = new javax.swing.JLabel();
+        mainPanel = new javax.swing.JLabel();
+        timerLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Chairman's Quiz");
 
         panel.setBackground(new java.awt.Color(0, 0, 0));
 
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/coderedrobotics/coderedsmall.png"))); // NOI18N
-        jLabel1.setText("jLabel1");
+        logo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/coderedrobotics/coderedsmall.png"))); // NOI18N
+        logo.setText("jLabel1");
 
-        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 48)); // NOI18N
-        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel2.setText("SOME SORT OF TITLE HERE?");
+        title.setFont(new java.awt.Font("Tahoma", 1, 48)); // NOI18N
+        title.setForeground(new java.awt.Color(255, 255, 255));
+        title.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        title.setText("DO YOU KNOW THE CODE?");
 
-        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel3.setText("TESTING !@#");
-        jLabel3.setMaximumSize(new java.awt.Dimension(702, 30));
+        mainPanel.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        mainPanel.setForeground(new java.awt.Color(255, 255, 255));
+        mainPanel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        mainPanel.setText("SOME PANEL");
+        mainPanel.setMaximumSize(new java.awt.Dimension(702, 30));
 
-        jLabel4.setFont(new java.awt.Font("Tahoma", 0, 48)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel4.setText("##:##");
-
-        jLabel5.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel5.setText("Test");
-
-        jLabel6.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jLabel6.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel6.setText("Test");
-
-        jLabel7.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel7.setText("Test");
-
-        jLabel8.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jLabel8.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel8.setText("Test");
+        timerLabel.setFont(new java.awt.Font("Tahoma", 0, 48)); // NOI18N
+        timerLabel.setForeground(new java.awt.Color(255, 255, 255));
+        timerLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        timerLabel.setText(" ");
 
         javax.swing.GroupLayout panelLayout = new javax.swing.GroupLayout(panel);
         panel.setLayout(panelLayout);
         panelLayout.setHorizontalGroup(
             panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(panelLayout.createSequentialGroup()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 764, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel4))
-                    .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelLayout.createSequentialGroup()
+                        .addComponent(logo, javax.swing.GroupLayout.PREFERRED_SIZE, 187, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, 764, Short.MAX_VALUE))
+                    .addComponent(timerLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelLayout.setVerticalGroup(
@@ -135,20 +263,12 @@ public class GUI extends javax.swing.JFrame {
             .addGroup(panelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(logo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 141, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 378, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel4)
+                .addComponent(timerLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -189,66 +309,38 @@ public class GUI extends javax.swing.JFrame {
                 new GUI().setVisible(true);
             }
         });
-//        boolean state = false;
-//        while (true) {
-//            Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, state);
-//            state = !state;
-//            try {
-//                Thread.sleep(500);
-//            } catch (InterruptedException ex) {
-//                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel logo;
+    private javax.swing.JLabel mainPanel;
     private javax.swing.JPanel panel;
+    private javax.swing.JLabel timerLabel;
+    private javax.swing.JLabel title;
     // End of variables declaration//GEN-END:variables
 
     private class KeyListener extends KeyAdapter {
 
-        GUI gui;
-
-        public KeyListener(GUI gui) {
-            this.gui = gui;
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            switch (e.getKeyCode()) {
-                default:
-                    break;
-            }
+        public KeyListener() {
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
             switch (e.getKeyCode()) {
-                default:
-                    break;
-            }
-        }
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-            switch (e.getKeyCode()) {
                 case KeyEvent.VK_1:
+                    handleResponse(1);
                     break;
                 case KeyEvent.VK_2:
+                    handleResponse(2);
                     break;
                 case KeyEvent.VK_3:
+                    handleResponse(3);
                     break;
                 case KeyEvent.VK_4:
+                    handleResponse(4);
                     break;
                 default:
+                    handleResponse(0);
                     break;
             }
         }
