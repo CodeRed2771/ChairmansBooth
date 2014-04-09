@@ -27,7 +27,7 @@ public class Preferences {
     private boolean useTimer = true;
     private int timerDuration = 15;
     private int numberOfQuestions = 5;
-    private String CSVSplitBy = "^";
+    private String CSVSplitBy = ">";
 
     private static final String ymlFile = "# This is the main configuration file for Code Red Robotic's\r\n"
             + "# Chairman's Quiz App.  You can find more help at the bottom\r\n"
@@ -42,7 +42,7 @@ public class Preferences {
             + "    useTimer = true\r\n"
             + "    timerDuration = 15\r\n"
             + "    numberOfQuestions = 5\r\n"
-            + "    CSVSplitBy = ^\r\n"
+            + "    CSVSplitBy = >\r\n"
             + "#\r\n"
             + "# So, How do I configure Stuff? Well.....\r\n"
             + "#\r\n"
@@ -68,7 +68,7 @@ public class Preferences {
             + "# CSVSplitBy can equal any character, or any string of characters.\r\n"
             + "# This determines what to split the question CSV file by.  Please\r\n"
             + "# only modify this if you are absolutely sure you know what you \r\n"
-            + "# are doing.  (The recommended character is \"^\").";
+            + "# are doing.  (The recommended character is \">\").";
     
     public Preferences(QuestionOrder questionOrder, boolean displayColors,
             boolean useHorn, int hornDuration, boolean useTimer, int timerDuration,
@@ -169,7 +169,7 @@ public class Preferences {
             boolean useTimer = true;
             int timerDuration = 15;
             int numberOfQuestions = 5;
-            String CSVSplitBy = "^";
+            String CSVSplitBy = ">";
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 line = line.replaceAll(" ", "");

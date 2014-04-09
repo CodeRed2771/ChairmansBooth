@@ -23,7 +23,7 @@ public class QuestionLoader {
         try {
             read = new BufferedReader(new FileReader(path));
             while ((line = read.readLine()) != null) {
-                String[] data = line.split(">");
+                String[] data = line.split(csvSplitBy);
                 QuestionManager.addQuestion(convertToQuestion(data));
             }
             read.close();

@@ -11,7 +11,7 @@
     useTimer = true
     timerDuration = 15
     numberOfQuestions = 5
-    CSVSplitBy = ^
+    CSVSplitBy = >
 #
 # So, How do I configure Stuff? Well.....
 #
@@ -37,4 +37,4 @@
 # CSVSplitBy can equal any character, or any string of characters.
 # This determines what to split the question CSV file by.  Please
 # only modify this if you are absolutely sure you know what you 
-# are doing.  (The recommended character is "^").
+# are doing.  (The recommended character is ">").
