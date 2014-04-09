@@ -9,7 +9,7 @@
     useHorn = true
     hornDuration = 500
     useTimer = true
-    timerDuration = 30
+    timerDuration = 15
     numberOfQuestions = 5
     CSVSplitBy = ^
 #

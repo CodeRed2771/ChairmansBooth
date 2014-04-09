@@ -2,7 +2,6 @@ package com.coderedrobotics;
 
 import java.awt.AWTException;
 import java.awt.Robot;
-import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;

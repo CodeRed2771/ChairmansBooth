@@ -45,7 +45,6 @@ public class Horn implements Runnable {
     }
 
     private void set(int millis) {
-        System.out.println(millis);
         setMillis = millis;
         setAt = System.currentTimeMillis();
     }

@@ -84,9 +84,9 @@ public class GUI extends javax.swing.JFrame {
         Collections.shuffle(order);
         currentCorrectAnswer = order.indexOf(question.getCorrectAnswer());
         currentQuestion = question;
-        for (String answer : order) {
+        for (int i = 0; i < 4; i++) {
             String character = "";
-            switch (order.indexOf(answer)) {
+            switch (i) {
                 case 0:
                     character = "A) ";
                     break;
@@ -100,7 +100,7 @@ public class GUI extends javax.swing.JFrame {
                     character = "D) ";
                     break;
             }
-            answerString += "<h1>" + character + answer + "</h1>";
+            answerString += "<h1>" + character + order.get(i) + "</h1>";
         }
         panel.setBackground(Color.BLACK);
         mainPanel.setText("<html><center>"
@@ -228,18 +228,19 @@ public class GUI extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Chairman's Quiz");
+        setUndecorated(true);
 
         panel.setBackground(new java.awt.Color(0, 0, 0));
 
         logo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/coderedrobotics/coderedsmall.png"))); // NOI18N
         logo.setText("jLabel1");
 
-        title.setFont(new java.awt.Font("Tahoma", 1, 48)); // NOI18N
+        title.setFont(new java.awt.Font("Tahoma", 1, 90)); // NOI18N
         title.setForeground(new java.awt.Color(255, 255, 255));
         title.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         title.setText("DO YOU KNOW THE CODE?");
 
-        mainPanel.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
+        mainPanel.setFont(new java.awt.Font("Tahoma", 0, 40)); // NOI18N
         mainPanel.setForeground(new java.awt.Color(255, 255, 255));
         mainPanel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         mainPanel.setText("SOME PANEL");
@@ -261,9 +262,9 @@ public class GUI extends javax.swing.JFrame {
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelLayout.createSequentialGroup()
                         .addComponent(logo, javax.swing.GroupLayout.PREFERRED_SIZE, 187, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, 764, Short.MAX_VALUE))
-                    .addComponent(timerLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, 1467, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addComponent(timerLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         panelLayout.setVerticalGroup(
             panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -273,7 +274,7 @@ public class GUI extends javax.swing.JFrame {
                     .addComponent(title, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(logo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 378, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 818, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(timerLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -352,6 +353,13 @@ public class GUI extends javax.swing.JFrame {
                 case KeyEvent.VK_SCROLL_LOCK:
                     break;
                 case KeyEvent.VK_NUM_LOCK:
+                    break;
+                case KeyEvent.VK_Q:                   
+                    state = State.HOME;
+                    correct = 0;
+                    incorrect = 0;
+                    currentQuestion = null;
+                    setHome();
                     break;
                 default:
                     handleResponse(0);
